@@ -1,0 +1,25 @@
+name: ToolAndFoodFX
+main: com.gmail.brandonli2010.ToolAndFoodFX.ToolAndFoodFX
+version: 0.1
+description: A plugin that lets you add multiple effects to food or tools
+author: thepowderguy
+website: 'https://github.com/thepowderguy/ToolAndFoodFX'
+commands:
+  addeffect:
+    permission: toolandfoodfx.addeffect
+    usage: /addeffect <effect type> <level> <duration>
+    description: add an effect to a tool or food.
+  deleffect:
+    permission: toolandfoodfx.deleffect
+    usage: /deleffect <effect type|all>
+    description: delete an effect from a tool or food.
+permissions:
+  toolandfoodfx.addeffect:
+    default: false
+  toolandfoodfx.deleffect:
+    default: false
+  toolandfoodfx.*:
+    default: false
+    children:
+      toolandfoodfx.addeffect: true
+      toolandfoodfx.deleffect: true
