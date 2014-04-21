@@ -266,9 +266,10 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 
 		case FLINT_AND_STEEL:
 		case SHEARS:
-		case FISHING_ROD:
 		case STICK:
+		case MILK_BUCKET:
 
+		case FISHING_ROD:
 		case BOW:
 		case SNOW_BALL:
 		case EGG:
@@ -315,7 +316,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 	@EventHandler (priority = EventPriority.NORMAL)
 	public void onProjectileLaunch(ProjectileLaunchEvent event)
 	{
-		if ((event.getEntity().getShooter() instanceof Player) & ((event.getEntityType() == EntityType.ARROW) | (event.getEntityType() == EntityType.SNOWBALL) | (event.getEntityType() == EntityType.EGG)))
+		if ((event.getEntity().getShooter() instanceof Player) & ((event.getEntityType() == EntityType.ARROW) | (event.getEntityType() == EntityType.SNOWBALL) | (event.getEntityType() == EntityType.EGG) | (event.getEntityType() == EntityType.FISHING_HOOK)))
 		{
 			if (((Player) event.getEntity().getShooter()).getItemInHand().getItemMeta().hasLore())
 			{
