@@ -17,14 +17,20 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class ToolAndFoodFX extends JavaPlugin implements Listener {
-	public void onEnable()
-	{
-		this.proj = new HashMap<Projectile, List<String>>();
-		Bukkit.getPluginManager().registerEvents(this, this);
-	}
 
 	private HashMap<Projectile, List<String>> proj;
 	public static String FXID = "\u00a79\u00a7l\u25B6 \0Effects\0 \u25C4";
+
+	@Override
+	public void onEnable()
+	{
+		if (this.proj == null)
+		{
+			this.proj = new HashMap<Projectile, List<String>>();
+		}
+		this.proj.clear();
+		Bukkit.getPluginManager().registerEvents(this, this);
+	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args)
@@ -36,9 +42,9 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 				sender.sendMessage("\u00a7cYou must be a player to use this command.");
 				return true;
 			}
-			if (args.length < 3)
+			if (args.length != 3)
 			{
-				sender.sendMessage("/addeffect <effect type> <level> <duration>");
+				sender.sendMessage("\u00a76Usage: \u00a7c/addeffect <effect type> <level> <duration>");
 				return true;
 			}
 			int lvl;
@@ -66,7 +72,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 				sender.sendMessage("\u00a7cYou must be holding an item.");
 				return true;
 			}
-			if (!(isTool(out.getType()) | out.getType().isEdible()))
+			if (!(this.isTool(out.getType()) | out.getType().isEdible()))
 			{
 				sender.sendMessage("\u00a7cYou cannot apply an effect to this item.");
 				return true;
@@ -106,7 +112,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 				meta.setLore(lore);
 			}
 			out.setItemMeta(meta);
-			sender.sendMessage("\u00a7aYou have added:\n\u00a79" + type.getName() + ", level: " + lvl + ", duration: " + dur + " seconds\n\u00a7cto: " + out.getType().toString());
+			sender.sendMessage("\u00a7bYou have added:\n" + type.getName() + ", level: " + lvl + ", duration: " + dur + " seconds\nto: " + out.getType().toString());
 			return true;
 		}
 		if (cmd.getName().equalsIgnoreCase("deleffect"))
@@ -118,7 +124,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 			}
 			if (args.length != 1)
 			{
-				sender.sendMessage("/deleffect <effect type|all>");
+				sender.sendMessage("\u00a76Usage: \u00a7c/deleffect <effect type|all>");
 				return true;
 			}
 			ItemStack out = ((Player) sender).getItemInHand();
@@ -127,7 +133,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 				sender.sendMessage("\u00a7cYou must be holding an item.");
 				return true;
 			}
-			if (!(isTool(out.getType()) | out.getType().isEdible()))
+			if (!(this.isTool(out.getType()) | out.getType().isEdible()))
 			{
 				sender.sendMessage("\u00a7cYou cannot delete an effect from this item.");
 				return true;
@@ -136,7 +142,6 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 			if (args[0].equalsIgnoreCase("all"))
 			{
 				List<String> lore = new ArrayList<String>();
-				lore.add(ToolAndFoodFX.FXID);
 				meta.setLore(lore);
 				out.setItemMeta(meta);
 				sender.sendMessage("\u00a7aYou have deleted all effects.");
@@ -183,6 +188,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 		return false;
 	}
 
+	@Override
 	public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) 
 	{
 		List<String> toreturn = new ArrayList<String>();
@@ -267,7 +273,6 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 		case FLINT_AND_STEEL:
 		case SHEARS:
 		case STICK:
-		case MILK_BUCKET:
 
 		case FISHING_ROD:
 		case BOW:
@@ -295,7 +300,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener {
 	{
 		if ((event.getDamager() instanceof Player) & (event.getEntity() instanceof LivingEntity))
 		{
-			if (isTool(((Player) event.getDamager()).getItemInHand().getType()))
+			if (this.isTool(((Player) event.getDamager()).getItemInHand().getType()))
 			{
 				List<String> Lore = ((Player) event.getDamager()).getItemInHand().getItemMeta().getLore();
 				this.ApplyFX((LivingEntity) event.getEntity(), Lore);
