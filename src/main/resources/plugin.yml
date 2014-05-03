@@ -1,25 +1,45 @@
 name: ToolAndFoodFX
 main: com.gmail.brandonli2010.ToolAndFoodFX.ToolAndFoodFX
-version: 0.1
-description: A plugin that lets you add multiple effects to food or tools
+version: 1.2
+description: A plugin that lets you add multiple effects to food, tools, weapons, and armor
 author: thepowderguy
-website: 'https://github.com/thepowderguy/ToolAndFoodFX'
+website: 'http://dev.bukkit.org/bukkit-plugins/toolandfoodfx/'
 commands:
   addeffect:
-    permission: toolandfoodfx.addeffect
     usage: /addeffect <effect type> <level> <duration>
     description: add an effect to a tool or food.
+    aliases: [adde]
   deleffect:
-    permission: toolandfoodfx.deleffect
     usage: /deleffect <effect type|all>
     description: delete an effect from a tool or food.
+    aliases: [dele]
 permissions:
-  toolandfoodfx.addeffect:
+  toolandfoodfx.command.addeffect.*:
     default: false
-  toolandfoodfx.deleffect:
+  toolandfoodfx.command.deleffect:
     default: false
-  toolandfoodfx.*:
+  toolandfoodfx.use.weapon:
+    default: false
+  toolandfoodfx.use.food:
+    default: false
+  toolandfoodfx.use.projectile:
+    default: false
+  toolandfoodfx.use.armor:
+    default: false
+  toolandfoodfx.command.*:
     default: false
     children:
-      toolandfoodfx.addeffect: true
-      toolandfoodfx.deleffect: true
+      toolandfoodfx.command.addeffect.*: true
+      toolandfoodfx.command.deleffect: true
+  toolandfoodfx.use.*:
+    default: false
+    children:
+      toolandfoodfx.use.weapon: true
+      toolandfoodfx.use.food: true
+      toolandfoodfx.use.projectile: true
+      toolandfoodfx.use.armor: true
+  toolandfoodfx.*:
+    default: op
+    children:
+      toolandfoodfx.use.*: true
+      toolandfoodfx.command.*: true
