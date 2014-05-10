@@ -23,10 +23,19 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 
 	protected HashMap<Projectile, ItemStack> proj;
 	public static String FXID = "\u00a79\u00a7l» Effects «";
+	private static List<String> numbers0To255;
+	private static List<String> numbers0To10000;
 
 	@Override
 	public void onEnable()
 	{
+		ToolAndFoodFX.numbers0To255 = new ArrayList<String>();
+		ToolAndFoodFX.numbers0To10000 = new ArrayList<String>();
+		for (int i = 0; i < 256; i++)
+			ToolAndFoodFX.numbers0To255.add(String.valueOf(i));
+		for (int base = 0; base < 5; base++)
+			for (int num = 1; num < 10; num++)
+				ToolAndFoodFX.numbers0To10000.add(String.valueOf((int) (Math.pow(10, base) * num)));
 		this.proj = new HashMap<Projectile, ItemStack>();
 		Bukkit.getPluginManager().registerEvents(this, this);
 		new projectileRemover(this).runTaskTimer(this, 1, 10);
@@ -38,7 +47,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		if (cmd.getName().equalsIgnoreCase("addeffect"))
 		{
 			if (!(sender instanceof Player)) {sender.sendMessage("\u00a7cYou must be a player to use this command."); return true;}
-			if (args.length > 4 | args.length < 3) {sender.sendMessage("\u00a76Usage: \u00a7c/addeffect <effect type> <level> <duration> [wear|use]"); return true;}
+			if (args.length > 4 | args.length < 3) {sender.sendMessage("\u00a76Usage: \u00a7c/addeffect <effect type> <level> <duration> [-wear]"); return true;}
 			int lvl, dur;
 			PotionEffectType type;
 			try
@@ -57,19 +66,18 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			if (!ToolAndFoodFX.canApplyEffect(out.getType())) {sender.sendMessage("\u00a7cYou cannot apply an effect to this item."); return true;}
 			ItemMeta meta = out.getItemMeta();
 			String color = "\u00a7c";
-			if (args[3].equalsIgnoreCase("use"))
-				color = "\u00a7c";//other.
-			else if (args[0].equalsIgnoreCase("wear"))
+			if (args.length == 4 && args[3].equalsIgnoreCase("-wear"))
 				color = "\u00a73";
-			else {sender.sendMessage("\u00a7cInvalid parameter"); return true;}
-			if (!meta.hasLore()) //add lore if there is no lore
+			else if (args.length == 4)
+				{sender.sendMessage("\u00a7cInvalid parameter"); return true;}
+			if (!meta.hasLore())
 			{
 				List<String> lore = new ArrayList<String>();
 				lore.add(ToolAndFoodFX.FXID);
 				lore.add(color + type.getName() + " " + lvl + " " + dur);
 				meta.setLore(lore);
 			}
-			else if (!meta.getLore().get(0).equals(ToolAndFoodFX.FXID)) //Lore is corrupt?
+			else if (!meta.getLore().get(0).equals(ToolAndFoodFX.FXID))
 			{
 				List<String> lore = new ArrayList<String>();
 				lore.add(ToolAndFoodFX.FXID);
@@ -80,8 +88,8 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			{
 				boolean exist = false;
 				List<String> lore = meta.getLore();
-				for (int i = 1; i < lore.size(); i++) //iterate through lore
-					if (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color))
+				for (int i = 1; i < lore.size(); i++)
+					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(" ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color)))
 					{
 						exist = true;
 						lore.set(i, color + type.getName() + " " + lvl + " " + dur);
@@ -98,34 +106,25 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		if (cmd.getName().equalsIgnoreCase("deleffect"))
 		{
 			if (!(sender instanceof Player)) {sender.sendMessage("\u00a7cYou must be a player to use this command."); return true;}
+			if (args.length > 2 | args.length < 1) {sender.sendMessage("\u00a76Usage: \u00a7c/deleffect <effect type|all> [-wear]"); return true;}
 			if (!sender.hasPermission("toolandfoodfx.command.deleffect")) {sender.sendMessage("\u00a74You do not have permission to use this command."); return true;}
-			if (args.length > 2 | args.length < 1) {sender.sendMessage("\u00a76Usage: \u00a7c/deleffect <effect type|all> [wear|use]"); return true;}
 			ItemStack out = ((Player) sender).getItemInHand();
 			if (out == null) {sender.sendMessage("\u00a7cYou must be holding an item."); return true;}
 			if (!ToolAndFoodFX.canApplyEffect(out.getType())) {sender.sendMessage("\u00a7cYou cannot delete an effect from this item."); return true;}
 			ItemMeta meta = out.getItemMeta();
-			String color = "";
-			if (args.length == 2)
-				if (args[1].equals("wear"))
-					color = "\u00a73";
-				else if (args[1].equals("use"))
-					color = "\u00a7c";
-				else {sender.sendMessage("\u00a7cInvalid parameter"); return true;}
+			String color = "\u00a7c";
+			if (args.length == 2 && args[1].equalsIgnoreCase("-wear"))
+				color = "\u00a73";
+			else if (args.length == 2)
+				{sender.sendMessage("\u00a7cInvalid parameter"); return true;}
 			if (args[0].equalsIgnoreCase("all"))
 			{
 				List<String> lore = meta.getLore();
 				if (lore.size() == 0) {sender.sendMessage("\u00a7cThere are no effects to delete."); return true;}
-				if (args.length == 1)
-					lore.clear();
-				else
-					for (int i = 1; i < lore.size();)
-						if (lore.get(i).startsWith(color))
-							lore.remove(i);
-						else
-							i++;
+				lore.clear();
 				meta.setLore(lore);
 				out.setItemMeta(meta);
-				sender.sendMessage("\u00a7aYou have deleted the effects.");
+				sender.sendMessage("\u00a7aYou have deleted all effects.");
 				return true;
 			}
 			PotionEffectType type = PotionEffectType.getByName(args[0]);
@@ -137,16 +136,17 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 				List<String> lore = meta.getLore();
 				boolean exist = false;
 				for (int i = 1; i < lore.size(); i++)
-				{
-					if (type == PotionEffectType.getByName(lore.get(i).substring(1).split(" ")[0]) & lore.get(i).startsWith(color))
+					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(" ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color)))
 					{
 						lore.remove(i);
 						exist = true;
 						break;
 					}
-				}
 				if (!exist)
+				{
 					sender.sendMessage("\u00a7cThat effect was not on the item.");
+					return true;
+				}
 				meta.setLore(lore);
 			}
 			out.setItemMeta(meta);
@@ -164,10 +164,11 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		if (command.getName().equalsIgnoreCase("addeffect") | command.getName().equalsIgnoreCase("deleffect"))
 		{
 			if ((args.length == 4 & command.getName().equalsIgnoreCase("addeffect")) | (args.length == 2 & command.getName().equalsIgnoreCase("deleffect")))
-			{
-				toreturn.add("wear");
-				toreturn.add("use");
-			}
+				toreturn.add("-wear");
+			if (args.length == 2 & command.getName().equalsIgnoreCase("addeffect"))
+				toreturn = new ArrayList<String>(ToolAndFoodFX.numbers0To255);
+			if (args.length == 3 & command.getName().equalsIgnoreCase("addeffect"))
+				toreturn = new ArrayList<String>(ToolAndFoodFX.numbers0To10000);
 			if (args.length == 1)
 				for (int i = 1; i < PotionEffectType.values().length; i++)
 					toreturn.add(PotionEffectType.values()[i].getName());
@@ -188,23 +189,38 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		{
 			for (int i = 1; i < Lore.size(); i++)
 			{
-				if (Lore.get(i).startsWith(pref))
+				String[] elem;
+				if (Lore.get(i).startsWith("\u00a7"))
+					elem = Lore.get(i).substring(2).split(" ");
+				else
+					elem = Lore.get(i).split(" ");
+				if (elem.length == 3)
 				{
-					String[] elem = Lore.get(i).substring(2).split(" ");
-					if (elem.length == 3)
-					{
-						try {
-							if (tmp)
-								en.addPotionEffect(new PotionEffect(PotionEffectType.getByName(elem[0]), 20, Integer.valueOf(elem[1])), true);
-							else
-								en.addPotionEffect(new PotionEffect(PotionEffectType.getByName(elem[0]), Integer.valueOf(elem[2]) * 20, Integer.valueOf(elem[1])), true);
-						}
-						catch(NumberFormatException e) {}
-						catch(IllegalArgumentException e) {}
+					try {
+						if (tmp)
+							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0]), 20, Integer.valueOf(elem[1])));
+						else
+							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0]), Integer.valueOf(elem[2]) * 20, Integer.valueOf(elem[1])));
 					}
+					catch(NumberFormatException e) {}
+					catch(IllegalArgumentException e) {}
 				}
 			}
 		}
+	}
+
+	private static void AddPotionFX(LivingEntity en, PotionEffect e)
+	{
+		boolean exist = false;
+		for (PotionEffect p : en.getActivePotionEffects())
+			if (p.getType() == e.getType())
+			{
+				exist = true;
+				if (e.getAmplifier() > p.getAmplifier() | (e.getAmplifier() == p.getAmplifier() & e.getDuration() > p.getDuration()) | p.getDuration() < 20)
+					en.addPotionEffect(e, true);
+			}
+		if (!exist)
+			en.addPotionEffect(e);
 	}
 
 	@EventHandler (priority = EventPriority.MONITOR)
@@ -253,7 +269,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		if (event.getEntity().getShooter() instanceof Player & ToolAndFoodFX.isProjectile(event.getEntityType()))
 		{
 			Player shooter = (Player) event.getEntity().getShooter();
-			if (!shooter.hasPermission("toolandfoodfx.use.projectile")) return;
+			if (!shooter.hasPermission("toolandfoodfx.use.weapon")) return;
 			if (shooter.getItemInHand().getItemMeta().hasLore())
 				this.proj.put(event.getEntity(), shooter.getItemInHand());
 		}
@@ -329,12 +345,13 @@ class projectileRemover extends BukkitRunnable
 		}
 		catch (ConcurrentModificationException e) {}
 		for (Player p : Bukkit.getOnlinePlayers())
-		{
-			for (ItemStack i : p.getInventory().getArmorContents())
-				ToolAndFoodFX.ApplyFX(p, i, "\u00a73", true);
-			if (p.getItemInHand() != null)
-				if (ToolAndFoodFX.isTool(p.getItemInHand().getType()) | p.getItemInHand().getType() == Material.BOW)
-					ToolAndFoodFX.ApplyFX(p, p.getItemInHand(), "\u00a73", true);
-		}
+			if (p.hasPermission("toolandfoodfx.use.wear"))
+			{
+				for (ItemStack i : p.getInventory().getArmorContents())
+					ToolAndFoodFX.ApplyFX(p, i, "\u00a73", true);
+				if (p.getItemInHand() != null)
+					if (ToolAndFoodFX.isTool(p.getItemInHand().getType()) | p.getItemInHand().getType() == Material.BOW)
+						ToolAndFoodFX.ApplyFX(p, p.getItemInHand(), "\u00a73", true);
+			}
 	}
 }
