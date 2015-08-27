@@ -22,7 +22,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 {
 
 	protected HashMap<Projectile, ItemStack> proj;
-	public static String FXID = "\u00a79\u00a7l» Effects «";
+	public static String FXID = "\u00a79» Effects:";
 	private static List<String> numbers0To255;
 	private static List<String> numbers0To10000;
 
@@ -74,14 +74,14 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			{
 				List<String> lore = new ArrayList<String>();
 				lore.add(ToolAndFoodFX.FXID);
-				lore.add(color + type.getName() + " " + lvl + " " + dur);
+				lore.add(color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
 				meta.setLore(lore);
 			}
 			else if (!meta.getLore().get(0).equals(ToolAndFoodFX.FXID))
 			{
 				List<String> lore = new ArrayList<String>();
 				lore.add(ToolAndFoodFX.FXID);
-				lore.add(color + type.getName() + " " + lvl + " " + dur);
+				lore.add(color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
 				meta.setLore(lore);
 			}
 			else
@@ -92,15 +92,15 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(" ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color)))
 					{
 						exist = true;
-						lore.set(i, color + type.getName() + " " + lvl + " " + dur);
+						lore.set(i, color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
 						break;
 					}
 				if (!exist)
-					lore.add(color + type.getName() + " " + lvl + " " + dur);
+					lore.add(color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
 				meta.setLore(lore);
 			}
 			out.setItemMeta(meta);
-			sender.sendMessage("\u00a7bYou have added:\n" + type.getName() + ", level: " + lvl + ", duration: " + dur + " seconds\nto: " + out.getType().toString());
+			sender.sendMessage("\u00a7bYou have added:\n" + type.getName().toLowerCase() + ", level: " + lvl + ", duration: " + dur + " seconds\nto: " + out.getType().toString());
 			return true;
 		}
 		if (cmd.getName().equalsIgnoreCase("deleffect"))
@@ -130,13 +130,13 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			PotionEffectType type = PotionEffectType.getByName(args[0]);
 			if (type == null) {sender.sendMessage("\u00a7cError: invalid potion effect"); return true;}
 			if (!meta.hasLore()) {sender.sendMessage("\u00a7cThere are no effects to delete."); return true;}
-			else if (!meta.getLore().get(0).equals(ToolAndFoodFX.FXID)) { sender.sendMessage("\u00a7cThere are no effects to delete."); return true;}
+			else if (!meta.getLore().get(0).contains("Effects")) { sender.sendMessage("\u00a7cThere are no effects to delete."); return true;}
 			else
 			{
 				List<String> lore = meta.getLore();
 				boolean exist = false;
 				for (int i = 1; i < lore.size(); i++)
-					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(" ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color)))
+					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(", ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(", ")[0]) & lore.get(i).startsWith(color)))
 					{
 						lore.remove(i);
 						exist = true;
@@ -185,22 +185,24 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 	{
 		if (item.getItemMeta() == null) return;
 		List<String> Lore = item.getItemMeta().getLore();
-		if (Lore != null && Lore.size() > 1 && Lore.get(0).equals(ToolAndFoodFX.FXID))
+		if (Lore != null && Lore.size() > 1 && Lore.get(0).contains("Effects"))
 		{
 			for (int i = 1; i < Lore.size(); i++)
 			{
+				if (!Lore.get(i).startsWith(pref))
+					continue;
 				String[] elem;
 				if (Lore.get(i).startsWith("\u00a7"))
-					elem = Lore.get(i).substring(2).split(" ");
+					elem = Lore.get(i).substring(2).split(", ");
 				else
-					elem = Lore.get(i).split(" ");
+					elem = Lore.get(i).split(", ");
 				if (elem.length == 3)
 				{
 					try {
 						if (tmp)
-							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0]), 20, Integer.valueOf(elem[1])));
+							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0].toUpperCase()), 20, Integer.valueOf(elem[1]), false, true));
 						else
-							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0]), Integer.valueOf(elem[2]) * 20, Integer.valueOf(elem[1])));
+							ToolAndFoodFX.AddPotionFX(en, new PotionEffect(PotionEffectType.getByName(elem[0].toUpperCase()), Integer.valueOf(elem[2]) * 20, Integer.valueOf(elem[1]), false, true));
 					}
 					catch(NumberFormatException e) {}
 					catch(IllegalArgumentException e) {}
