@@ -77,7 +77,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 				lore.add(color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
 				meta.setLore(lore);
 			}
-			else if (!meta.getLore().get(0).equals(ToolAndFoodFX.FXID))
+			else if (!meta.getLore().get(0).contains("Effects"))
 			{
 				List<String> lore = new ArrayList<String>();
 				lore.add(ToolAndFoodFX.FXID);
@@ -89,7 +89,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 				boolean exist = false;
 				List<String> lore = meta.getLore();
 				for (int i = 1; i < lore.size(); i++)
-					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(" ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(" ")[0]) & lore.get(i).startsWith(color)))
+					if (lore.get(i).length() > 2 && lore.get(i).substring(2).split(", ").length == 3 && (type == PotionEffectType.getByName(lore.get(i).substring(2).split(", ")[0]) & lore.get(i).startsWith(color)))
 					{
 						exist = true;
 						lore.set(i, color + type.getName().charAt(0) + type.getName().toLowerCase().substring(1) + ", " + lvl + ", " + dur);
