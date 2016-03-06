@@ -1,6 +1,6 @@
 name: ToolAndFoodFX
-main: com.gmail.brandonli2010.ToolAndFoodFX.ToolAndFoodFX
-version: 1.4
+main: com.powder.ToolAndFoodFX.ToolAndFoodFX
+version: 1.6
 description: A plugin that lets you add multiple effects to food, tools, weapons, and armor
 author: thepowderguy
 website: 'http://dev.bukkit.org/bukkit-plugins/toolandfoodfx/'
@@ -13,10 +13,16 @@ commands:
     usage: /deleffect <effect type|all> [-wear]
     description: Delete an effect from an item. Adding -wear makes it delete wearable effects.
     aliases: [dele]
+  reloadtfx:
+    usage: /reloadtfx
+    description: reloads ToolAndFoodFx
+    aliases: []
 permissions:
   toolandfoodfx.command.addeffect.*:
     default: false
   toolandfoodfx.command.deleffect:
+    default: false
+  toolandfoodfx.command.reload:
     default: false
   toolandfoodfx.use.weapon:
     default: false
