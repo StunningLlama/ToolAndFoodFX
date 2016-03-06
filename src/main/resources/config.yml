@@ -1,0 +1,8 @@
+#A list of all items considered food
+FoodItems: []
+
+#A list of all items considered armor
+ArmorItems: []
+
+#A list of all items considered tools, or weapons
+WeaponItems: []
