@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.potion.*;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.command.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.*;
@@ -23,7 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class ToolAndFoodFX extends JavaPlugin implements Listener
 {
 
-	protected HashMap<Projectile, ItemStack> proj;
+	//protected HashMap<Projectile, ItemStack> proj;
 	public static String FXID = "\u00a79» Effects:";
 	private static List<String> numbers0To255;
 	private static List<String> numbers0To10000;
@@ -54,9 +55,9 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		for (int i: this.getConfig().getIntegerList("ArmorItems")) {
 			customArmor.add(i);
 		}
-		this.proj = new HashMap<Projectile, ItemStack>();
+		//this.proj = new HashMap<Projectile, ItemStack>();
 		Bukkit.getPluginManager().registerEvents(this, this);
-		new projectileRemover(this).runTaskTimer(this, 1, 10);
+		new EffectApplicationTimer(this).runTaskTimer(this, 1, 10);
 	}
 
 	@Override
@@ -217,10 +218,19 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		}
 		return toreturn;
 	}
-
-	protected static void ApplyFX(LivingEntity en, ItemStack item, String pref, boolean tmp)
+	
+	protected static boolean CanApplyFX(ItemStack item) {
+		if (item == null || !item.hasItemMeta()) return false;
+		if (!item.getItemMeta().hasLore()) return false;
+		List<String> Lore = item.getItemMeta().getLore();
+		if (Lore != null && Lore.size() > 1 && Lore.get(0).contains("Effects"))
+			return true;
+		return false;
+	}
+	
+	protected static void ApplyFX(Entity en, ItemStack item, String pref, boolean tmp)
 	{
-		if (item.getItemMeta() == null) return;
+		if (item == null || !item.hasItemMeta()) return;
 		List<String> Lore = item.getItemMeta().getLore();
 		if (Lore != null && Lore.size() > 1 && Lore.get(0).contains("Effects"))
 		{
@@ -248,21 +258,36 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		}
 	}
 
-	private static void AddPotionFX(LivingEntity en, PotionEffect e)
+	private static void AddPotionFX(Entity target, PotionEffect e)
 	{
-		boolean exist = false;
-		for (PotionEffect p : en.getActivePotionEffects())
-			if (p.getType() == e.getType())
-			{
-				exist = true;
-				if (e.getAmplifier() > p.getAmplifier() | (e.getAmplifier() == p.getAmplifier() & e.getDuration() > p.getDuration()) | p.getDuration() < 20)
-					en.addPotionEffect(e, true);
-			}
-		if (!exist)
-			en.addPotionEffect(e);
+		if (target instanceof LivingEntity) {
+			LivingEntity en = (LivingEntity) target;
+			boolean exist = false;
+			for (PotionEffect p : en.getActivePotionEffects())
+				if (p.getType() == e.getType())
+				{
+					exist = true;
+					if (e.getAmplifier() > p.getAmplifier() | (e.getAmplifier() == p.getAmplifier() & e.getDuration() > p.getDuration()) | p.getDuration() < 20)
+						en.addPotionEffect(e, true);
+				}
+			if (!exist)
+				en.addPotionEffect(e);
+		} else if (target instanceof TippedArrow) {
+			TippedArrow en = (TippedArrow) target;
+			boolean exist = false;
+			for (PotionEffect p : en.getCustomEffects())
+				if (p.getType() == e.getType())
+				{
+					exist = true;
+					if (e.getAmplifier() > p.getAmplifier() | (e.getAmplifier() == p.getAmplifier() & e.getDuration() > p.getDuration()) | p.getDuration() < 20)
+						en.addCustomEffect(e, true);
+				}
+			if (!exist)
+				en.addCustomEffect(e, true);
+		}
 	}
 
-	@EventHandler (priority = EventPriority.MONITOR)
+	@EventHandler
 	public void onPlayerItemConsume(PlayerItemConsumeEvent event)
 	{
 		if (customFoods.contains(event.getItem().getTypeId()) || event.getItem().getType().isEdible())
@@ -272,7 +297,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		}
 	}
 
-	@EventHandler (priority = EventPriority.MONITOR)
+	@EventHandler
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event)
 	{
 		if (event.getDamager() instanceof Player & event.getEntity() instanceof LivingEntity)
@@ -291,7 +316,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			for (ItemStack i : damaged.getInventory().getArmorContents())
 				ToolAndFoodFX.ApplyFX((LivingEntity) event.getDamager(), i, "\u00a7c", false);
 		}
-		if (event.getDamager() instanceof Projectile & event.getEntity() instanceof LivingEntity)
+		/*if (event.getDamager() instanceof Projectile & event.getEntity() instanceof LivingEntity)
 		{
 			Projectile proj = (Projectile) event.getDamager();
 			if ((proj.getShooter() instanceof Player) & (this.proj.get(proj) != null))
@@ -299,10 +324,10 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 				ToolAndFoodFX.ApplyFX((LivingEntity) event.getEntity(), this.proj.get(proj), "\u00a7c", false);
 				this.proj.remove(proj);
 			}
-		}
+		}*/
 	}
 	
-	@EventHandler (priority = EventPriority.MONITOR)
+	/*@EventHandler
 	public void onProjectileLaunch(ProjectileLaunchEvent event)
 	{
 		if (event.getEntity().getShooter() instanceof Player & ToolAndFoodFX.isProjectile(event.getEntityType()))
@@ -311,6 +336,23 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 			if (!shooter.hasPermission("toolandfoodfx.use.weapon")) return;
 			if (shooter.getInventory().getItemInMainHand().getItemMeta().hasLore())
 				this.proj.put(event.getEntity(), shooter.getInventory().getItemInMainHand());
+		}
+	}*/
+	
+	@EventHandler
+	public void onEntityShootBow(EntityShootBowEvent event) {
+		if (event.getEntity() instanceof Player) {
+			Player shooter = (Player) event.getEntity();
+			if (!shooter.hasPermission("toolandfoodfx.use.weapon")) return;
+			if (!ToolAndFoodFX.CanApplyFX(shooter.getInventory().getItemInMainHand())) return;
+			TippedArrow arrow = (TippedArrow)((ProjectileSource) event.getEntity()).launchProjectile(TippedArrow.class, event.getProjectile().getVelocity());
+			
+			//arrow.setVelocity();
+			//arrow.setShooter(event.getEntity());
+			ToolAndFoodFX.ApplyFX(arrow, shooter.getInventory().getItemInMainHand(), "\u00a7c", false);
+			event.setProjectile(arrow);
+			//event.setCancelled(true);
+			//((Player)event.getEntity()).sho
 		}
 	}
 
@@ -338,19 +380,18 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		case CHAINMAIL_HELMET: case CHAINMAIL_CHESTPLATE: case CHAINMAIL_LEGGINGS: case CHAINMAIL_BOOTS:
 		case GOLD_HELMET: case GOLD_CHESTPLATE: case GOLD_LEGGINGS: case GOLD_BOOTS:
 		case DIAMOND_HELMET: case DIAMOND_CHESTPLATE: case DIAMOND_LEGGINGS: case DIAMOND_BOOTS:
-		case FISHING_ROD: case BOW: case SNOW_BALL: case EGG:
-
+		//case FISHING_ROD: case BOW: case SNOW_BALL: case EGG:
+		case BOW:
 			return true;
 		default:
 			return false;
 		}
 	}
 
-	protected static boolean isProjectile(EntityType e)
+	/*protected static boolean isProjectile(EntityType e)
 	{
 		switch (e) {
 
-		case ARROW:
 		case SNOWBALL:
 		case FISHING_HOOK:
 		case EGG:
@@ -359,7 +400,7 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 		default:
 			return false;
 		}
-	}
+	}*/
 
 	protected static boolean isTool(Material m)
 	{
@@ -386,10 +427,10 @@ public class ToolAndFoodFX extends JavaPlugin implements Listener
 	}
 }
 
-class projectileRemover extends BukkitRunnable
+class EffectApplicationTimer extends BukkitRunnable
 {
 	ToolAndFoodFX plugin;
-	public projectileRemover(ToolAndFoodFX instance)
+	public EffectApplicationTimer(ToolAndFoodFX instance)
 	{
 		this.plugin = instance;
 	}
@@ -397,12 +438,12 @@ class projectileRemover extends BukkitRunnable
 	@Override
 	public void run()
 	{
-		try {
+	/*	try {
 			for (Entity e : plugin.proj.keySet())
 				if (e.isDead())
 					plugin.proj.remove(e);
 		}
-		catch (ConcurrentModificationException e) {}
+		catch (ConcurrentModificationException e) {}*/
 		for (Player p : plugin.getServer().getOnlinePlayers())
 			if (p.hasPermission("toolandfoodfx.use.wear"))
 			{
